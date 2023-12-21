@@ -147,6 +147,8 @@ model title {
 
   volumes volume[]
 
+  reviews review[]
+
   author   author @relation(fields: [authorId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   authorId String
 
@@ -354,6 +356,9 @@ model review {
   id String @id @default(uuid())
 
   content String
+
+  title   title  @relation(fields: [titleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  titleId String @unique
 
   profile   profile @relation(fields: [profileId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   profileId String
