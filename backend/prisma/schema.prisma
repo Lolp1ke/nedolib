@@ -1,0 +1,368 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model user {
+  id String @id @default(uuid())
+
+  username String @unique
+  hash     String @unique
+  salt     String @unique
+
+  email       String  @unique
+  emailStatus Boolean @default(false)
+
+  profile profile?
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@map("Users")
+}
+
+model session {
+  id String @id @default(uuid())
+
+  ip       String
+  location String
+  device   String
+
+  expirationDate DateTime
+
+  tokens token[]
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@map("Sessions")
+}
+
+model token {
+  id String @id @default(uuid())
+
+  refreshToken String
+  revoked      Boolean @default(false)
+
+  session   session @relation(fields: [sessionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  sessionId String
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@index([sessionId])
+  @@map("Tokens")
+}
+
+model profile {
+  id String @id @default(uuid())
+
+  name String?
+  bio  String?
+
+  profilePicturePath String?
+  bannerPicturePath  String?
+
+  user   user   @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  userId String @unique
+
+  translator translator?
+  admin      admin?
+
+  comments comment[]
+  reviews  review[]
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@map("Profiles")
+}
+
+model translator {
+  id String @id @default(uuid())
+
+  type translatorType[]
+
+  profile   profile @relation(fields: [profileId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  profileId String  @unique
+
+  teamOwner team? @relation(name: "owner")
+
+  teamMember   team   @relation(name: "member", fields: [teamMemberId], references: [id], onUpdate: Restrict)
+  teamMemberId String @unique
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@map("Translators")
+}
+
+model translatorType {
+  id String @id @default(cuid())
+
+  type ETranslatorType
+
+  translator   translator @relation(fields: [translatorId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  translatorId String
+
+  @@index([translatorId])
+  @@map("TranslatorTypes")
+}
+
+enum ETranslatorType {
+  cleaner
+  typer
+  editor
+}
+
+model admin {
+  id String @id @default(uuid())
+
+  profile   profile @relation(fields: [profileId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  profileId String  @unique
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@map("Admins")
+}
+
+model title {
+  id String @id @default(uuid())
+
+  name             String                 @unique
+  alternativeNames titleAlternativeName[]
+  release          Int
+
+  tags   titleTag[]
+  genres titleGenre[]
+  status ETitleStatus
+
+  teams team[]
+
+  volumes volume[]
+
+  author   author @relation(fields: [authorId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  authorId String
+
+  artist   artist @relation(fields: [artistId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  artistId String
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@index([authorId])
+  @@index([artistId])
+  @@map("Titles")
+}
+
+model titleAlternativeName {
+  id String @id @default(cuid())
+
+  alternativeName String
+
+  title   title  @relation(fields: [titleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  titleId String
+
+  @@index([titleId])
+  @@map("TitleAlternativeNames")
+}
+
+model titleTag {
+  id String @id @default(cuid())
+
+  tag ETitleTag
+
+  title   title  @relation(fields: [titleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  titleId String
+
+  @@index([titleId])
+  @@map("TitleTags")
+}
+
+model titleGenre {
+  id String @id @default(cuid())
+
+  genre ETitleGenre
+
+  title   title  @relation(fields: [titleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  titleId String
+
+  @@index([titleId])
+  @@map("TitleGenres")
+}
+
+enum ETitleTag {
+  tag
+}
+
+enum ETitleGenre {
+  genre
+}
+
+enum ETitleStatus {
+  onGoing
+  finished
+  depricated
+}
+
+model team {
+  id String @id @default(uuid())
+
+  name String @unique
+  bio  String
+
+  profilePicturePath String?
+  bannerPicturePath  String?
+
+  titles title[]
+
+  owner   translator @relation(name: "owner", fields: [ownerId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  ownerId String     @unique
+
+  members translator[] @relation(name: "member")
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@map("Teams")
+}
+
+model author {
+  id String @id @default(uuid())
+
+  name               String
+  bio                String?
+  profilePicturePath String?
+
+  title title[]
+
+  @@map("Authors")
+}
+
+model artist {
+  id String @id @default(uuid())
+
+  name               String
+  bio                String?
+  profilePicturePath String?
+
+  title title[]
+
+  @@map("Artists")
+}
+
+model volume {
+  id String @id @default(uuid())
+
+  number Float
+
+  title   title  @relation(fields: [titleId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  titleId String
+
+  chapters chapter[]
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@index([titleId])
+  @@map("Volumes")
+}
+
+model chapter {
+  id String @id @default(uuid())
+
+  number Float
+
+  volume   volume @relation(fields: [volumeId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  volumeId String
+
+  pages page[]
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@index([volumeId])
+  @@map("Chapters")
+}
+
+model page {
+  id String @id @default(uuid())
+
+  number Float
+
+  picturePath String
+
+  chapter   chapter @relation(fields: [chapterId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  chapterId String
+
+  comments comment[]
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@index([chapterId])
+  @@map("Pages")
+}
+
+model comment {
+  id String @id @default(uuid())
+
+  content String
+
+  page   page   @relation(fields: [pageId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  pageId String
+
+  profile   profile @relation(fields: [profileId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  profileId String
+
+  respects respect[]
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@index([profileId])
+  @@index([pageId])
+  @@map("Comments")
+}
+
+model respect {
+  id String @id @default(uuid())
+
+  isPositive Boolean
+
+  comment   comment? @relation(fields: [commentId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  commentId String?
+
+  review   review? @relation(fields: [reviewId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  reviewId String?
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@index([commentId])
+  @@index([reviewId])
+  @@map("Respects")
+}
+
+model review {
+  id String @id @default(uuid())
+
+  content String
+
+  profile   profile @relation(fields: [profileId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  profileId String
+
+  respects respect[]
+
+  createdAt DateTime @default(now())
+  alteredAt DateTime @default(now()) @updatedAt
+
+  @@index([profileId])
+  @@map("Reviews")
+}

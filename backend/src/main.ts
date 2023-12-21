@@ -1,7 +1,9 @@
+import "dotenv/config";
 import { NestFactory } from "@nestjs/core";
 import { type NestExpressApplication } from "@nestjs/platform-express";
 
 import { AppModule } from "@/app.module";
+import { mainConfig } from "./config/main";
 
 async function bootstrap() {
 	const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -9,8 +11,10 @@ async function bootstrap() {
 	app.enableCors({
 		origin: true,
 	});
-	await app.listen(3000);
+
+	await app.listen(mainConfig.BACKEND_PORT);
 }
+
 bootstrap().then(() => {
-	console.log("Server is listening on port: ");
+	console.log("Server is listening on port: ", mainConfig.BACKEND_PORT);
 });
