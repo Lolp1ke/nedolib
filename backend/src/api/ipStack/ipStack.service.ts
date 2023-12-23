@@ -28,6 +28,7 @@ export class IpStackService {
 				) => {
 					let locaion = "";
 					for (const key in data.data) {
+						if (data.data[key] == null) continue;
 						locaion += data.data[key];
 					}
 

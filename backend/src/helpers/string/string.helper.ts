@@ -8,7 +8,7 @@ export class StringHelper {
 	}
 
 	public hash(value: string): string {
-		return hashSync(value, 18);
+		return hashSync(value, 12);
 	}
 
 	public compare(value: string, hash: string): boolean {
