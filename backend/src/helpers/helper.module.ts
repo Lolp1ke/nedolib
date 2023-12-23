@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
 
-import { StringService } from "./string/string.service";
+import { StringHelper } from "./string/string.helper";
 
 @Module({
-	providers: [StringService],
-	exports: [StringService],
+	providers: [StringHelper],
+	exports: [StringHelper],
 })
 export class HelperModule {}
