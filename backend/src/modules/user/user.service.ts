@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import {
+	ConflictException,
+	Injectable,
+	NotFoundException,
+	UnauthorizedException,
+} from "@nestjs/common";
 
 import { StringHelper } from "@/helpers/string/string.helper";
 import { PrismaService } from "@/modules/prisma/prisma.service";
@@ -21,7 +26,8 @@ export class UserService {
 				OR: [{ email: dto.email }, { username: dto.username }],
 			},
 		});
-		if (exist) throw new ConflictException("User already exist", "Try to use another username/email");
+		if (exist)
+			throw new ConflictException("User already exist", "Try to use another username/email");
 
 		dto.password = this.stringHelper.hash(dto.password);
 		return this.prismaService.user.create({
@@ -30,7 +36,9 @@ export class UserService {
 				email: dto.email,
 				hash: dto.password,
 				profile: {
-					create: {},
+					create: {
+						name: dto.username,
+					},
 				},
 			},
 		});

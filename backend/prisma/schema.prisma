@@ -76,16 +76,36 @@ model profile {
   user   user   @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   userId String @unique
 
+  friends friend[]
+
   translator translator?
   admin      admin?
 
   comments comment[]
   reviews  review[]
 
+  @@map("Profiles")
+}
+
+model friend {
+  id String @id @default(uuid())
+
+  profile   profile @relation(fields: [profileId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  profileId String
+
+  status EFriendStatus @default(pending)
+
   createdAt DateTime @default(now())
   alteredAt DateTime @default(now()) @updatedAt
 
-  @@map("Profiles")
+  @@index([profileId])
+  @@map("Friends")
+}
+
+enum EFriendStatus {
+  pending
+  accepted
+  denied
 }
 
 model translator {
